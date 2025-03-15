@@ -10,7 +10,7 @@ In this codebase we leverage the following featuers of databricks supporing the 
  - Deployment and Serving with feedback processing
 
  This project draws inferences from the dbdemos provided by databricks. 
- 
+
  [LLM Chatbot With Retrieval Augmented Generation (RAG) and DBRX](https://notebooks.databricks.com/demos/llm-rag-chatbot/index.html#)
 
 ## Theory
