@@ -1,4 +1,4 @@
     llm_model_serving_endpoint_name: "databricks-meta-llama-3-1-70b-instruct",  # the foundation model we want to use
     vector_search_endpoint_name: 'eval-codebase-ep',  # the endoint we want to use for vector search
-    vector_search_index: 'lhdev.tfm_slv_network_assets.eval_rag_data_codebase_vector_idx',
+    vector_search_index: 'catalog.schema.eval_rag_data_codebase_vector_idx',
     llm_prompt_template: """You are an assistant that answers questions. Use the following pieces of retrieved context to answer the question. Some pieces of context may be irrelevant, in which case you should not use them to form the answer.\n\nContext: {context}""",

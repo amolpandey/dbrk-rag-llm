@@ -37,7 +37,7 @@ def get_text_from_folder_files(path: str) -> dict:
 
     return txt_data
 
-src_data_path = 'file:/Workspace/Users/amol.pandey@essentialenergy.com.au/asset_model_enhancements_jan_25/notebooks/slv_network_assets/'
+src_data_path = 'file:/Workspace/Users/username@company.com.au/project/notebooks/demo/'
 codebase_result = get_text_from_folder_files(src_data_path)
 
 # COMMAND ----------
@@ -94,13 +94,13 @@ data_sdf = data_sdf.selectExpr('row_no','file_no','file_name','file_path', 'chun
 data_sdf.write \
 .mode("overwrite") \
 .option("overwriteSchema", "true") \
-.saveAsTable(f'lhdev.tfm_slv_network_assets.eval_rag_data_codebase')
+.saveAsTable(f'catalog.schema.eval_rag_data_codebase')
 
 # COMMAND ----------
 
 # DBTITLE 1,Enable CDC on the new created table
 # Note: CDC has to be enabled on the underlying table for the building of vector search index
-spark.sql('ALTER TABLE lhdev.tfm_slv_network_assets.eval_rag_data_codebase SET TBLPROPERTIES (delta.enableChangeDataFeed = true)')
+spark.sql('ALTER TABLE catalog.schema.eval_rag_data_codebase SET TBLPROPERTIES (delta.enableChangeDataFeed = true)')
 
 # COMMAND ----------
 
@@ -120,8 +120,8 @@ client = VectorSearchClient(disable_notice=True)
 
 index = client.create_delta_sync_index(
   endpoint_name=VECTOR_SEARCH_ENDPOINT_NAME,
-  source_table_name="lhdev.tfm_slv_network_assets.eval_rag_data_codebase",
-  index_name="lhdev.tfm_slv_network_assets.eval_rag_data_codebase_vector_idx",
+  source_table_name="catalog.schema.eval_rag_data_codebase",
+  index_name="catalog.schema.eval_rag_data_codebase_vector_idx",
   pipeline_type="TRIGGERED",
   primary_key="row_no",
   embedding_source_column="chunk_text",
@@ -133,7 +133,7 @@ index = client.create_delta_sync_index(
 
 # DBTITLE 1,Evaluate: Test the new vector index for its similarity score
 client = VectorSearchClient(disable_notice=True)
-index = client.get_index(endpoint_name=VECTOR_SEARCH_ENDPOINT_NAME, index_name='lhdev.tfm_slv_network_assets.eval_rag_data_codebase_vector_idx')
+index = client.get_index(endpoint_name=VECTOR_SEARCH_ENDPOINT_NAME, index_name='catalog.schema.eval_rag_data_codebase_vector_idx')
 print('Vector Index Name: ' + index.name)
 
 result = index.similarity_search(
@@ -152,7 +152,7 @@ for d in result['result']['data_array']:
 chain_config = {
     "llm_model_serving_endpoint_name": "databricks-meta-llama-3-1-70b-instruct",  # the foundation model we want to use
     "vector_search_endpoint_name": VECTOR_SEARCH_ENDPOINT_NAME,  # the endoint we want to use for vector search
-    "vector_search_index": 'lhdev.tfm_slv_network_assets.eval_rag_data_codebase_vector_idx',
+    "vector_search_index": 'catalog.schema.eval_rag_data_codebase_vector_idx',
     "llm_prompt_template": """You are an assistant that answers questions. Use the following pieces of retrieved context to answer the question. Some pieces of context may be irrelevant, in which case you should not use them to form the answer.\n\nContext: {context}""",
 }
 
@@ -262,13 +262,13 @@ with mlflow.start_run(run_name="rag_bot_codebase"):
           example_no_conversion=True,  # Required by MLflow to use the input_example as the chain's schema,
           # Specify resources for automatic authentication passthrough
           resources=[
-            DatabricksVectorSearchIndex(index_name='lhdev.tfm_slv_network_assets.eval_rag_data_codebase_vector_idx'),
+            DatabricksVectorSearchIndex(index_name='catalog.schema.eval_rag_data_codebase_vector_idx'),
             DatabricksServingEndpoint(endpoint_name='databricks-meta-llama-3-1-70b-instruct')
           ]
       )
 
 MODEL_NAME = "rag_bot_codebase"
-MODEL_NAME_FQN = f"lhdev.tfm_slv_network_assets.{MODEL_NAME}"
+MODEL_NAME_FQN = f"catalog.schema.{MODEL_NAME}"
 # Register to UC
 uc_registered_model_info = mlflow.register_model(model_uri=logged_chain_info.model_uri, name=MODEL_NAME_FQN)
 
